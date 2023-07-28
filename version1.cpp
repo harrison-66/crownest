@@ -124,7 +124,6 @@ void newMasterPass(string primary_pass){
     hash_file1.close();
     cout << "Your primary password has been set!\n";
     return;
-    
 }
 
 long generateSalt(string primary_pass){
