@@ -1,5 +1,5 @@
 // First major update -> Adding classes, and allowing for multiple users.
-// g++ compile command: g++ main.cpp -lsqlite3 -o main
+// g++17 compile command: g++ -std=c++17 main.cpp User.cpp -lsqlite3 -o main
 
 #include <iostream>
 #include <string>
@@ -7,7 +7,7 @@
 #include <fstream>
 #include <regex>
 
-//#include "User.hpp"
+#include "User.hpp" 
 #include "sql/sqlite3.h"
 
 using namespace std;
@@ -25,6 +25,24 @@ bool createUserTable(){
                                 "email TEXT NOT NULL,"
                                 "hash TEXT NOT NULL);";
     res = sqlite3_exec(db, userTableQuery, NULL, NULL, NULL);
+    if(res != SQLITE_OK){
+        cout << "Error creating table: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return false;
+    }
+    sqlite3_close(db);
+    return true;
+}
+
+bool createPasswordTable(){
+    sqlite3 *db;
+    int res = sqlite3_open("passwordManager.db", &db);
+    if(res != SQLITE_OK){
+        cout << "Error opening database" << endl;
+        return false;
+    }
+    const char* passwordTableQuery = "CREATE TABLE IF NOT EXISTS passwords (id INTEGER PRIMARY KEY AUTOINCREMENT,userID INTEGER NOT NULL,service TEXT NOT NULL,username TEXT NOT NULL,encrypted_password TEXT NOT NULL,FOREIGN KEY (user_id) REFERENCES users (id));";
+    res = sqlite3_exec(db, passwordTableQuery, NULL, NULL, NULL);
     if(res != SQLITE_OK){
         cout << "Error creating table: " << sqlite3_errmsg(db) << endl;
         sqlite3_close(db);
@@ -149,58 +167,93 @@ bool newUser(string username, string email, string hash){
 
 int main(){
     createUserTable();
-    cout << "Welcome to the Password Manager!" << endl;
-    cout << "1. Create a new user\n2. Sign-in" << endl;
-    int choice;
-    cin >> choice;
-    if(choice == 1){
-        cout << "Enter your username: ";
-        string username;
-        cin >> username;
-        if(username.length() > 20){
-            cout << "Username too long" << endl;
+    createPasswordTable();
+    User current = User();
+    bool signedIn = false;
+    while(!signedIn){
+        cout << "Welcome to the Password Manager!" << endl;
+        cout << "1. Create a new user\n2. Sign-in" << endl;
+        int choice;
+        cin >> choice;
+        if(choice == 1){
+            cout << "Enter a username: ";
+            string username;
+            cin >> username;
+            if(username.length() > 20){
+                cout << "Username too long" << endl;
+                return 1;
+            }
+            if(usernameExists(username)){
+                cout << "Username already exists" << endl;
+                return 1;
+            }
+            cout << "Enter your email: ";
+            string email;
+            cin >> email;
+            if(emailExists(email)){
+                cout << "Email already exists" << endl;
+                return 1;
+            }
+            if(!validEmail(email)){
+                cout << "Invalid email" << endl;
+                return 1;
+            }
+            cout << "Enter a master password: ";
+            string master;
+            cin >> master;
+            string hash = crunchPass(master);
+            if(!newUser(username, email, hash)){
+                cout << "Error creating user" << endl;
+                return 1;
+            }
+        }else if(choice == 2){
+            cout << "Enter your username: ";
+            string username;
+            cin >> username;
+            if(!usernameExists(username)){
+                cout << "Username does not exist" << endl;
+                return 1;
+            }
+            cout << "Enter your master password: ";
+            string master;
+            cin >> master;
+            current = User(username, master);
+            if(current.verifyUser()){
+                signedIn = true;
+            }else{
+                cout << "Invalid username or password" << endl;
+                return 1;
+            }
+        }else{
+            cout << "Invalid choice" << endl;
             return 1;
         }
-        if(usernameExists(username)){
-            cout << "Username already exists" << endl;
-            return 1;
+    }
+    while(1){ // main loop, access has been verified, and current user object instantiated
+        cout << "1. Add a new password\n2. View a specific password\n3. View all passwords\n4. Delete a password\n5. Exit" << endl;
+        int choice;
+        cin >> choice;
+        if(choice == 1){
+            cout << "Enter the service: ";
+            string service;
+            cin >> service;
+            cout << "Enter the username: ";
+            string username;
+            cin >> username;
+            cout << "Enter the password: ";
+            string password;
+            cin >> password;
+            current.addPassword(service, username, password);
         }
-        cout << "Enter your email: ";
-        string email;
-        cin >> email;
-        if(emailExists(email)){
-            cout << "Email already exists" << endl;
-            return 1;
-        }
-        if(!validEmail(email)){
-            cout << "Invalid email" << endl;
-            return 1;
-        }
-        cout << "Enter your password: ";
-        string password;
-        cin >> password;
-        string hash = crunchPass(password);
-        if(!newUser(username, email, hash)){
-            cout << "Error creating user" << endl;
-            return 1;
-        }
-    }else if(choice == 2){
-        cout << "Enter your username: ";
-        string username;
-        cin >> username;
-        cout << "Enter your password: ";
-        string password;
-        cin >> password;
+        if(choice == 2){
 
-    }else{
-        cout << "Invalid choice" << endl;
-        return 1;
-    }
-    if(2 == 1){
-        cout << "Hello World!" << endl;
-    }
-    while(1){ // main loop
-        
+        }
+        if(choice == 3){
+            current.printAllPasswords();
+        }
+        if(choice == 5){
+            return 0;
+        }
     }
     return 0;
 }
