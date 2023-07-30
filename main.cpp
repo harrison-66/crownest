@@ -244,15 +244,20 @@ int main(){
             string password;
             cin >> password;
             current.addPassword(service, username, password);
-        }
-        if(choice == 2){
-
-        }
-        if(choice == 3){
+        }else if(choice == 2){
+            cout << "Enter the service: ";
+            string service;
+            cin >> service;
+            current.getServicePasswords(service);
+        }else if(choice == 3){
             current.printAllPasswords();
-        }
-        if(choice == 5){
+        }else if(choice == 4){
+
+        }else if(choice == 5){
             return 0;
+        }else{
+            cout << "Invalid choice" << endl;
+            cin.clear();
         }
     }
     return 0;

@@ -4,9 +4,9 @@
 
 using namespace std;
 
-const long SALT_KEY = 2384589059374561;
+const long SALT_KEY = 2384589059374561; // arbitrary value for salt key
 
-struct PasswordData {
+struct PasswordData { // used to store data from sql query on passwords
     std::string service;
     std::string username;
     std::string encrypted_password;
@@ -27,7 +27,7 @@ struct PasswordData {
 }*/
 
 
-long generateSalt(string primary_pass){
+long generateSalt(string primary_pass){ // generate a salt value based on the user's password
     long salt = 1;
     for (int i = 0; i < primary_pass.length(); i++){
         salt *= primary_pass[i];
@@ -36,7 +36,7 @@ long generateSalt(string primary_pass){
     return salt;
 }
 
-long stringToLong(string toConvert){
+long stringToLong(string toConvert){ // convert a string to a longeeee
     long return_value = 0;
     long dig_count = 1;
     for(int i = (toConvert.length()-1); i >=0; i--){
@@ -48,7 +48,7 @@ long stringToLong(string toConvert){
     return return_value;
 }
 
-bool allowAccess(string username, string master){ // first get the hash from the database
+bool allowAccess(string username, string master){ // check if the user's password is correct
     string checker;
     long hashed = 0;
     int dig_count = 0;
@@ -102,14 +102,14 @@ bool allowAccess(string username, string master){ // first get the hash from the
     return true;
 }
 
-User::User(){
+User::User(){ // default constructor, used when user class initiated, so scope is higher
     this->username = "";
     this->email = "";
     this->master = "";
     this->userID = -1;
 }
 
-User::User(string username, string master){
+User::User(string username, string master){ // constructor
     this->username = username;
     this->master = master;
     this->email = "";
@@ -141,11 +141,11 @@ User::User(string username, string master){
     }
 }
 
-bool User::verifyUser(){
+bool User::verifyUser(){ // verify the user's password (class method)
     return allowAccess(this->username, this->master);
 }
 
-bool User::existingPassword(string service, string username){
+bool User::existingPassword(string service, string username){ // check if the password already exists for the user
     sqlite3 *db;
     int res = sqlite3_open("passwordManager.db", &db);
     if(res != SQLITE_OK){
@@ -171,7 +171,7 @@ bool User::existingPassword(string service, string username){
     return false; // return false
 }
 
-void User::addPassword(string service, string username_, string password){
+void User::addPassword(string service, string username_, string password){ // add a password to the database
     string encrypted_password = encryptPassword(password);
     sqlite3 *db;
     int res = sqlite3_open("passwordManager.db", &db);
@@ -203,7 +203,7 @@ void User::addPassword(string service, string username_, string password){
     return; // return false
 }
 
-string User::decryptPassword(string encrypted_string){
+string User::decryptPassword(string encrypted_string){ // decrypt the password
     long encrypted = stringToLong(encrypted_string);
     long salt = generateSalt(this->master);
     long to_decode = encrypted ^ salt; // XOR the encrypted string with the salt to get the original value
@@ -220,7 +220,7 @@ string User::decryptPassword(string encrypted_string){
     return give_to_user;
 }
 
-string User::encryptPassword(string password){
+string User::encryptPassword(string password){ // encrypt the password
     long salt = generateSalt(this->master);
     long digit_count = 1;
     long num_pass = 0;
@@ -233,13 +233,46 @@ string User::encryptPassword(string password){
     return to_string(salted); // return the encrpted password
 }
 
-int User::getUserID(){
+int User::getUserID(){ // getter for querying the database
     return this->userID;
 }
 
 void User::getServicePasswords(string service){
+    sqlite3 *db;
+    int res = sqlite3_open("passwordManager.db", &db);
+    if(res != SQLITE_OK){
+        cout << "Error opening database" << endl;
+        return;
+    }
+    string query = "SELECT username, encrypted_password FROM passwords WHERE userID = " + to_string(this->userID) + " AND service = " + service + ";";
+    vector<PasswordData> passwordArray;
+    sqlite3_stmt* stmt;
+    res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+    if (res != SQLITE_OK) {
+        cout << "Error preparing query: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return;
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        PasswordData password;
+        password.service = service;
+        password.username = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        password.encrypted_password = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
 
+        passwordArray.push_back(password);
+    }
+    cout << "Password array size: " << passwordArray.size() << endl;
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    // Close the database connection
+    cout << "Passwords stored for " << service << ":" << endl;
+    for (const auto& password : passwordArray) {
+        cout << "Username: " << password.username << ", Decrypted Password: " << decryptPassword(password.encrypted_password) << endl;
+    }
+    return;
 }
+
+
 void User::printAllPasswords(){
     cout << "Printing all passwords for user: " << this->username << endl;
     sqlite3 *db;
@@ -272,4 +305,5 @@ void User::printAllPasswords(){
     for (const auto& password : passwordArray) {
         cout << "Service: " << password.service << ", Username: " << password.username << ", Decrypted Password: " << decryptPassword(password.encrypted_password) << endl;
     }
+    return;
 }
