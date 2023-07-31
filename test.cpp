@@ -140,9 +140,7 @@ bool createPasswordTable(){
 
 
 int main(){ // just need a query to print the user database
-    showUsersTable();
-    cout << endl;
-    showPasswordsTable();
+    dropPasswordsTable();
 
     return 0;
 }

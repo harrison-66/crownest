@@ -59,11 +59,19 @@ bool allowAccess(string username, string master){ // check if the user's passwor
         cout << "Error opening database" << endl;
         return false;
     }
-    string query = "SELECT hash FROM users WHERE username = '" + username + "';";
+    string query = "SELECT hash FROM users WHERE username = :username;";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return false;
+    }
+    // Bind the parameter to the prepared statement using named placeholder
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        std::cout << "Error binding username parameter: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return false;
     }
@@ -120,11 +128,19 @@ User::User(string username, string master){ // constructor
         cout << "Error opening database" << endl;
         return;
     }
-    string query = "SELECT id FROM users WHERE username = '" + username + "';";
+    string query = "SELECT id FROM users WHERE username = :username;";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return;
+    }
+    // Bind the parameter to the prepared statement using named placeholder
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding username parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
     }
@@ -152,11 +168,27 @@ bool User::existingPassword(string service, string username){ // check if the pa
         cout << "Error opening database" << endl;
         return false;
     }
-    string query = "SELECT * FROM passwords WHERE service = '" + service + "' AND username = '" + username + "';";
+    string query = "SELECT * FROM passwords WHERE service = :service AND username = :username;";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return false;
+    }
+    // Bind parameters to the prepared statement using named placeholders
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":service"), service.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding service parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding username parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return false;
     }
@@ -183,11 +215,43 @@ void User::addPassword(string service, string username_, string password){ // ad
         cout << "Password already exists for this service and username" << endl;
         return;
     }
-    string query = "INSERT INTO passwords (userID, service, username, encrypted_password) VALUES (" + to_string(this->userID) + ", '" + service + "', '" + username_ + "', '" + encrypted_password + "');";
+    string query = "INSERT INTO passwords (userID, service, username, encrypted_password) VALUES (:userID, :service, :username, :encrypted_password);";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return;
+    }
+        // Bind parameters to the prepared statement using named placeholders
+    res = sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, ":userID"), this->userID);
+    if (res != SQLITE_OK) {
+        cout << "Error binding userID parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":service"), service.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding service parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username_.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding username parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":encrypted_password"), encrypted_password.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding encrypted_password parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
     }
@@ -209,7 +273,7 @@ string User::decryptPassword(string encrypted_string){ // decrypt the password
     long to_decode = encrypted ^ salt; // XOR the encrypted string with the salt to get the original value
     string pass_out;
     while(to_decode > 0){
-        int temp = to_decode % 100;
+        long temp = to_decode % 100;
         to_decode = to_decode / 100;
         pass_out += char(temp + 32);
     }
@@ -244,7 +308,7 @@ void User::getServicePasswords(string service){
         cout << "Error opening database" << endl;
         return;
     }
-    string query = "SELECT username, encrypted_password FROM passwords WHERE userID = " + to_string(this->userID) + " AND service = " + service + ";";
+    string query = "SELECT username, encrypted_password FROM passwords WHERE userID = :userID AND service = :service;";
     vector<PasswordData> passwordArray;
     sqlite3_stmt* stmt;
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
@@ -253,11 +317,29 @@ void User::getServicePasswords(string service){
         sqlite3_close(db);
         return;
     }
+
+    // Bind parameters to the prepared statement
+    res = sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, ":userID"), this->userID);
+    if (res != SQLITE_OK) {
+        cout << "Error binding parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":service"), service.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         PasswordData password;
         password.service = service;
-        password.username = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-        password.encrypted_password = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+        password.username = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+        password.encrypted_password = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
 
         passwordArray.push_back(password);
     }
@@ -267,7 +349,7 @@ void User::getServicePasswords(string service){
     // Close the database connection
     cout << "Passwords stored for " << service << ":" << endl;
     for (const auto& password : passwordArray) {
-        cout << "Username: " << password.username << ", Decrypted Password: " << decryptPassword(password.encrypted_password) << endl;
+        cout << "Username: " << password.username << "| Decrypted Password: " << decryptPassword(password.encrypted_password) << endl;
     }
     return;
 }
@@ -281,12 +363,20 @@ void User::printAllPasswords(){
         cout << "Error opening database" << endl;
         return;
     }
-    string query = "SELECT service, username, encrypted_password FROM passwords WHERE userID = " + to_string(this->userID) + ";";
+    string query = "SELECT service, username, encrypted_password FROM passwords WHERE userID = :userID;";
     vector<PasswordData> passwordArray;
     sqlite3_stmt* stmt;
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
     if (res != SQLITE_OK) {
         cout << "Error preparing query: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return;
+    }
+    // Bind parameters to the prepared statement using named placeholders
+    res = sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, ":userID"), this->userID);
+    if (res != SQLITE_OK) {
+        cout << "Error binding parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
     }
@@ -303,7 +393,7 @@ void User::printAllPasswords(){
     sqlite3_close(db);
     // Close the database connection
     for (const auto& password : passwordArray) {
-        cout << "Service: " << password.service << ", Username: " << password.username << ", Decrypted Password: " << decryptPassword(password.encrypted_password) << endl;
+        cout << "Service: " << password.service << "| Username: " << password.username << "| Decrypted Password: " << decryptPassword(password.encrypted_password) << endl;
     }
     return;
 }
