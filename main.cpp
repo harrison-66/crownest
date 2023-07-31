@@ -12,6 +12,45 @@
 
 using namespace std;
 
+string escapeString(const string& input) {
+    string escapedString;
+    for (char c : input) {
+        switch (c) {
+            case '\'':
+                escapedString += "''"; // Replace single quote with two single quotes
+                break;
+            case '\"':
+                escapedString += "\\\""; // Replace double quote with backslash and double quote
+                break;
+            case '\\':
+                escapedString += "\\\\"; // Replace backslash with double backslash
+                break;
+            case '\0':
+                escapedString += "\\0"; // Replace null character with backslash and zero
+                break;
+            case '\b':
+                escapedString += "\\b"; // Replace backspace with backslash and b
+                break;
+            case '\n':
+                escapedString += "\\n"; // Replace newline with backslash and n
+                break;
+            case '\r':
+                escapedString += "\\r"; // Replace carriage return with backslash and r
+                break;
+            case '\t':
+                escapedString += "\\t"; // Replace tab with backslash and t
+                break;
+            case '\x1A':
+                escapedString += "\\Z"; // Replace Ctrl+Z (substitute) with backslash and Z
+                break;
+            // Add more cases for other special characters if needed
+            default:
+                escapedString += c;
+        }
+    }
+    return escapedString;
+}
+
 bool createUserTable(){
     sqlite3 *db;
     int res = sqlite3_open("passwordManager.db", &db);
@@ -41,7 +80,7 @@ bool createPasswordTable(){
         cout << "Error opening database" << endl;
         return false;
     }
-    const char* passwordTableQuery = "CREATE TABLE IF NOT EXISTS passwords (id INTEGER PRIMARY KEY AUTOINCREMENT,userID INTEGER NOT NULL,service TEXT NOT NULL,username TEXT NOT NULL,encrypted_password TEXT NOT NULL,FOREIGN KEY (user_id) REFERENCES users (id));";
+    const char* passwordTableQuery = "CREATE TABLE IF NOT EXISTS passwords (id INTEGER PRIMARY KEY AUTOINCREMENT,userID INTEGER NOT NULL,service TEXT NOT NULL,username TEXT NOT NULL,encrypted_password TEXT NOT NULL,FOREIGN KEY (userID) REFERENCES users (id));";
     res = sqlite3_exec(db, passwordTableQuery, NULL, NULL, NULL);
     if(res != SQLITE_OK){
         cout << "Error creating table: " << sqlite3_errmsg(db) << endl;
@@ -59,11 +98,18 @@ bool usernameExists(string username){ // checks the Users table
         cout << "Error opening database" << endl;
         return false;
     }
-    string query = "SELECT * FROM users WHERE username = '" + username + "';";
+    string query = "SELECT * FROM users WHERE username = :username;";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return false;
+    }
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding username parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return false;
     }
@@ -85,11 +131,19 @@ bool emailExists(string email){
         cout << "Error opening database" << endl;
         return false;
     }
-    string query = "SELECT * FROM users WHERE email = '" + email + "';";
+    string query = "SELECT * FROM users WHERE email = :email;";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return false;
+    }
+    // Bind the parameter to the prepared statement using named placeholder
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":email"), email.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding email parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return false;
     }
@@ -145,11 +199,35 @@ bool newUser(string username, string email, string hash){
         cout << "Error opening database" << endl;
         return false;
     } // db is open successfully
-    string query = "INSERT INTO users (username, email, hash) VALUES ('" + username + "', '" + email + "', '" + hash + "');";
+    string query = "INSERT INTO users (username, email, hash) VALUES (:username, :email, :hash);";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return false;
+    }
+        // Bind the parameters to the prepared statement using named placeholders
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding username parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":email"), email.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding email parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":hash"), hash.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding hash parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
         return false;
     }
@@ -243,16 +321,20 @@ int main(){
             cout << "Enter the password: ";
             string password;
             cin >> password;
+            service = escapeString(service);
+            username = escapeString(username);
+            password = escapeString(password);
             current.addPassword(service, username, password);
         }else if(choice == 2){
             cout << "Enter the service: ";
             string service;
             cin >> service;
+            service = escapeString(service);
             current.getServicePasswords(service);
         }else if(choice == 3){
             current.printAllPasswords();
         }else if(choice == 4){
-
+            
         }else if(choice == 5){
             return 0;
         }else{
