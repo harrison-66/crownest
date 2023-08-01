@@ -25,6 +25,7 @@ class User{ //* this class doesnt insert into the database, it just holds the da
         string encryptPassword(string password);
         void getServicePasswords(string service);
         void printAllPasswords();
+        bool deletePassword(string service, string username);
 
 
     private:
@@ -33,4 +34,3 @@ class User{ //* this class doesnt insert into the database, it just holds the da
         string master;
         int userID;
 };
-
