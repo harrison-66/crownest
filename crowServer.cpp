@@ -4,6 +4,13 @@
 #include <streambuf>
 #include <crow.h>
 #include "User.hpp"
+#include "sql/sqlite3.h"
+#include "crowFunctions.hpp"
+
+#include <crow.h>
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 // g++ command: g++ -std=c++11 -I./Crow/include -I/opt/homebrew/Cellar/asio/1.28.1/include crowServer.cpp User.cpp -lsqlite3 -lpthread -o my_crow_app
 
@@ -20,6 +27,8 @@ std::string readHTMLFile(const std::string& filename) {
 }
 
 int main() {
+    createUserTable();
+    createPasswordTable();
     // Set up the Crow server
     SimpleApp app;
 
@@ -28,21 +37,118 @@ int main() {
         return readHTMLFile("src/index.html");
     });
 
-    // Endpoint to handle form submission and user actions
-    CROW_ROUTE(app, "/action")
-        .methods("POST"_method)([](const request& req) {
-        // Get the form parameters from the request
-        const auto username = req.url_params.get("username");
-        const auto password = req.url_params.get("password");
-
-        // You can now use the 'username' and 'password' values to perform user actions
-        // For example, you can create a new user or sign in the existing user here.
-
-        // Sample response for now, you can modify this according to your project's logic
-        // For simplicity, we are just returning a success message.
-        return "Action successful!";
+    CROW_ROUTE(app, "/home")([]() {
+        return readHTMLFile("src/home.html");
     });
 
+    CROW_ROUTE(app, "/login-style.css")([]() {
+        return readHTMLFile("src/login-style.css");
+    });
+
+
+// Endpoint for user registration (register route)
+    CROW_ROUTE(app, "/register").methods(HTTPMethod::Post)([](const crow::request& req) {
+        // Parse the JSON data from the request body
+        auto json_data = crow::json::load(req.body);
+        if (!json_data) {
+            crow::json::wvalue response_data;
+            response_data["success"] = false;
+            response_data["error"] = "Invalid JSON data";
+            return crow::response(400, response_data);
+        }
+
+        // Extract the registration data from the JSON payload
+        std::string username = json_data["username"].s();
+        std::string email = json_data["email"].s();
+        std::string password = json_data["password"].s();
+
+        // Validate the registration data
+        if (username.length() > 20) {
+            crow::json::wvalue response_data;
+            response_data["success"] = false;
+            response_data["error"] = "Username too long";
+            return crow::response(400, response_data);
+        }
+        if (usernameExists(username)) {
+            crow::json::wvalue response_data;
+            response_data["success"] = false;
+            response_data["error"] = "Username already exists";
+            return crow::response(400, response_data);
+        }
+        if (emailExists(email)) {
+            crow::json::wvalue response_data;
+            response_data["success"] = false;
+            response_data["error"] = "Email already exists";
+            return crow::response(400, response_data);
+        }
+        if (!validEmail(email)) {
+            crow::json::wvalue response_data;
+            response_data["success"] = false;
+            response_data["error"] = "Invalid email";
+            return crow::response(400, response_data);
+        }
+
+        // Hash the password before storing it in the database
+        std::string hash = crunchPass(password);
+
+        // Insert the user data into the database
+        if (!newUser(username, email, hash)) {
+            crow::json::wvalue response_data;
+            response_data["success"] = false;
+            response_data["error"] = "Error creating user";
+            return crow::response(500, response_data);
+        }
+
+        // Registration successful
+        crow::json::wvalue response_data;
+        response_data["success"] = true;
+        return crow::response(200, response_data);
+    });
+
+    CROW_ROUTE(app, "/login").methods(HTTPMethod::Post)([](const crow::request& req) {
+        // Parse the JSON data from the request body
+        auto json_data = crow::json::load(req.body);
+        if (!json_data) {
+            return crow::response(400, "Invalid JSON data");
+        }
+
+        // Extract the username and password from the JSON data
+        std::string username = json_data["username"].s();
+        std::string password = json_data["password"].s();
+
+        // Verify the login credentials in the database
+        if (verifyLogin(username, password)) {
+            // Login successful
+            // You may use a session mechanism to keep the user logged in
+            // For simplicity, we're returning a success message as JSON
+            crow::json::wvalue response_data;
+            response_data["success"] = true;
+            return crow::response(200, response_data);
+        } else {
+            // Login failed
+            crow::json::wvalue response_data;
+            response_data["success"] = false;
+            return crow::response(401, response_data);
+        }
+    });
+
+    CROW_ROUTE(app, "/login.js")
+    ([]() {
+        // Read the contents of login.js file
+        ifstream file("src/login.js");
+        if (!file.is_open()) {
+            return crow::response(404, "Not found");
+        }
+
+        stringstream buffer;
+        buffer << file.rdbuf();
+        file.close();
+
+        // Return the contents of login.js with appropriate MIME type
+        response response(buffer.str());
+        response.add_header("Content-Type", "application/javascript");
+        return response;
+    });
     // Start the server on port 8080
     app.port(8080).multithreaded().run();
 
