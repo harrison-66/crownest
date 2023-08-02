@@ -334,7 +334,15 @@ int main(){
         }else if(choice == 3){
             current.printAllPasswords();
         }else if(choice == 4){
-            
+            cout << "Enter the service: ";
+            string service;
+            cin >> service;
+            cout << "Enter the username: ";
+            string username;
+            cin >> username;
+            service = escapeString(service);
+            username = escapeString(username);
+            current.deletePassword(service, username);
         }else if(choice == 5){
             return 0;
         }else{

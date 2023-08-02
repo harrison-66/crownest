@@ -42,3 +42,19 @@ The [User.hpp](User.hpp) header file is included in both files, defining the Use
 Note: The password manager is a basic implementation for educational purposes and may lack some advanced features typically found in commercial password managers. It is essential to follow best practices for password management and security.
 
 Version 1 Markdown found [here](version1README.md)
+
+## _CROW UPDATE_
+### Usage
+- clone Crow into the project directory
+- ``` shell
+  git clone https://github.com/CrowCpp/Crow.git
+  ```
+- sometimes Asio / Boost doesnt get installed along with Crow, if so, use
+- ``` shell
+   brew install asio
+  ```
+- then compile with:
+- ```shell
+    g++ -std=c++11 -I./Crow/include -I<path-to-asio/include> crowServer.cpp User.cpp -lsqlite3 -lpthread -o my_crow_app
+  ```
+  (remove the asio include if necessary)

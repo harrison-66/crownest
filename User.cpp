@@ -398,7 +398,6 @@ void User::printAllPasswords(){
     return;
 }
 
-
 bool User::deletePassword(string service, string username){
     sqlite3 *db;
     int res = sqlite3_open("passwordManager.db", &db);
