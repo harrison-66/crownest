@@ -289,7 +289,3 @@ bool verifyLogin(const std::string& username, const std::string& password) {
     sqlite3_close(db);
     return false;
 }
-
-string User::getUsername(){
-    return username;
-}

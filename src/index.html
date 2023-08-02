@@ -7,65 +7,147 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
     <title>Password Manager</title>
     <link rel="stylesheet" href="login-style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
-    <h1>Password Manager</h1>
-
+<body class="bg-[#ae9c75] font-mono">
+    <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-lg">
+            <h1 class="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
+                Welcome to CrowNest
+            </h1>
+            <p class="mx-auto mt-4 max-w-md text-center text-rose-950">
+                A C++ and SQL based password manager, ported for web with Crow.
+            </p>
     <!-- Login Form -->
-    <form id="loginForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-    
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-    
-        <input type="submit" value="Login" id="submit">
-    </form>
+            <form id="loginForm" class="mb-0 mt-6 space-y-4 border-slate-600 rounded-lg p-4 shadow-lg shadow-gray-700 sm:p-6 lg:p-8 bg-gray-900 text-white text-l">
+                <p class="text-center text-lg font-medium">Sign in to your nest</p>
+                <div>
+                    <label for="username" class="sr-only">Username:</label>
+                    <div class="relative">
+                        <input type="text" id="username" name="username" placeholder="username" class="text-gray-900 w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm" required>
+                        <span class="absolute inset-y-0 end-0 grid place-content-center px-4 mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password:</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 right-0 flex items-center px-2">
+                            <input spellcheck="false" class="hidden js-password-toggle" id="toggle" type="checkbox" />
+                            <label class="bg-gray-300 hover:bg-gray-400 rounded js-password-label mb-3 px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer js-password-label" for="toggle">show</label>
+                        </div>
+                        <input type="password" id="password" name="password" class="js-password text-gray-900 border-2 leading-tight w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm" placeholder="password" required>
+                    </div>
+                </div>
+                <button type="submit" id="submit" class="bg-rose-950 hover:bg-rose-800 text-white block w-full rounded-lg px-5 py-3 text-sm font-medium text-white">
+                    Sign in
+                </button>
+                
+                <p class="text-center text-sm text-gray-500">No account? <a class="underline" href="#" id="toggleFormLinkA">Sign up</a></p>
+            </form>
 
-    <!-- Register Form (hidden by default) -->
-    <form id="registerForm" style="display: none;">
-        <label for="username">Username:</label>
-        <input type="text" id="usernameReg" name="username" required>
-    
-        <label for="email">Email:</label>
-        <input type="email" id="emailReg" name="email" required>
-    
-        <label for="password">Password:</label>
-        <input type="password" id="passwordReg" name="password" required>
-    
-        <input type="submit" value="Register" id="submit">
-    </form>
+            <!-- Register Form (hidden by default) -->
+            <form id="registerForm" style="display: none;" class="mb-0 mt-6 space-y-4 border-slate-600 rounded-lg p-4 shadow-lg shadow-gray-700 sm:p-6 lg:p-8 bg-gray-900 text-white text-l">
+                <p class="text-center text-lg font-medium">Register your own nest</p>
+                <div>
+                    <label for="username" class="sr-only">Username:</label>
+                    <div class="relative">
+                        <input type="text" id="usernameReg" name="username" placeholder="username" class="text-gray-900 w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm" required>
+                        <span class="absolute inset-y-0 end-0 grid place-content-center px-4 mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label for="email" class="sr-only">Email:</label>
+                    <div class="relative">
+                        <input type="email" id="emailReg" name="email" placeholder="email" class="text-gray-900 w-full rounded-lg border-gray-200 p-3 pe-12 text-sm shadow-sm" required>
+                        <span class="absolute inset-y-0 end-0 grid place-content-center px-4 mb-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.779l5.513-6.812zm9.208-1.264l4.616-3.741v9.348l-4.616-5.607z"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password:</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 right-0 flex items-center px-2">
+                            <input spellcheck="false" class="hidden js-password-toggle-2" id="toggle" type="checkbox" />
+                            <label class="bg-gray-300 hover:bg-gray-400 rounded js-password-label-2 mb-3 px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer" for="toggle">show</label>
+                        </div>
+                        <input type="password" id="passwordReg" name="password" class="js-password-2 text-gray-900 border-2 leading-tight w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm" placeholder="password" required>
+                    </div>
+                </div>
+                <!--<input type="submit" value="Register" id="submit" class="bg-rose-950 hover:bg-rose-800 text-white block w-full rounded-lg px-5 py-3 text-sm font-medium text-white">-->
+                <button type="submit" id="submit" class="bg-rose-950 hover:bg-rose-800 text-white block w-full rounded-lg px-5 py-3 text-sm font-medium text-white">
+                    Register
+                </button>
+                <p class="text-center text-sm text-gray-500">Have an account? <a class="underline" href="#" id="toggleFormLinkB">Sign in</a></p>
+            </form>
 
-    <!-- Toggle between Login and Register forms -->
-    <p id="toggleMessage">Don't have an account? <a href="#" id="toggleFormLink">Register here</a>.</p>
+        </div>
+    </div>
 
-    <!-- Add the CROW JavaScript library -->
-    <!--<script src="https://cdn.jsdelivr.net/npm/crowjs"></script>-->
-    <!-- Add your login.js script -->
     <script src="login.js"></script>
 
     <!-- Script to handle form toggling -->
     <script>
-        document.getElementById("toggleFormLink").addEventListener("click", function (event) {
+        document.getElementById("toggleFormLinkA").addEventListener("click", function (event) { // will link to register form
             event.preventDefault();
             const loginForm = document.getElementById("loginForm");
             const registerForm = document.getElementById("registerForm");
-            const toggleMessage = document.getElementById("toggleMessage");
-            const toggleLink = document.getElementById("toggleFormLink");
-    
-            // Toggle between Login and Register forms
-            if (loginForm.style.display === "none") {
-                loginForm.style.display = "block";
-                registerForm.style.display = "none";
-                toggleMessage.textContent = "Don't have an account? ";
-            } else {
-                loginForm.style.display = "none";
-                registerForm.style.display = "block";
-                toggleMessage.textContent = "Already have an account? ";
-                toggleLink.textContent = "Login here";
-            }
+            loginForm.style.display = "none";
+            registerForm.style.display = "block";
         });
+
+        document.getElementById("toggleFormLinkB").addEventListener("click", function (event) { // will link to login form
+            event.preventDefault();
+            const loginForm = document.getElementById("loginForm");
+            const registerForm = document.getElementById("registerForm");
+            loginForm.style.display = "block";
+            registerForm.style.display = "none";
+        });
+
+        const passwordToggle = document.querySelector('.js-password-toggle')
+
+            passwordToggle.addEventListener('change', function() {
+            const password = document.querySelector('.js-password'),
+                passwordLabel = document.querySelector('.js-password-label')
+
+            if (password.type === 'password') {
+                password.type = 'text'
+                passwordLabel.innerHTML = 'hide'
+            } else {
+                password.type = 'password'
+                passwordLabel.innerHTML = 'show'
+            }
+
+            password.focus()
+            })
+
+        const passwordToggle2 = document.querySelector('.js-password-toggle-2')
+
+            passwordToggle.addEventListener('change', function() {
+            const password = document.querySelector('.js-password-2'),
+                passwordLabel = document.querySelector('.js-password-label-2')
+
+            if (password.type === 'password') {
+                password.type = 'text'
+                passwordLabel.innerHTML = 'hide'
+            } else {
+                password.type = 'password'
+                passwordLabel.innerHTML = 'show'
+            }
+
+            password.focus()
+            })
     </script>
 </body>
 

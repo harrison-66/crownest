@@ -131,7 +131,8 @@ int main() {
         // Registration successful
         crow::json::wvalue response_data;
         response_data["success"] = true;
-        return crow::response(200, response_data);
+        std::string htmlContent = readHTMLFile("src/index.html");
+        return crow::response(htmlContent);
     });
 
     CROW_ROUTE(app, "/login").methods(HTTPMethod::Post)([&app](const crow::request& req) {
