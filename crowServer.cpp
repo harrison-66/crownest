@@ -55,8 +55,6 @@ int main() {
         auto& session = app.get_context<Session>(req);
         // Retrieve user data from session if available
         string username_ = session.get("user", "Not Found");
-        cout << "in home" << endl;
-        //string username = user.getUsername();
         if (username_.empty()) {
             return crow::response(401, "Unauthorized");
         }

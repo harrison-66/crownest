@@ -26,6 +26,7 @@ class User{ //* this class doesnt insert into the database, it just holds the da
         void getServicePasswords(string service);
         void printAllPasswords();
         string getUsername();
+        bool deletePassword(string service, string username);
 
 
     private:

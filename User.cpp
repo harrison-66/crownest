@@ -397,3 +397,54 @@ void User::printAllPasswords(){
     }
     return;
 }
+
+
+bool User::deletePassword(string service, string username){
+    sqlite3 *db;
+    int res = sqlite3_open("passwordManager.db", &db);
+    if(res != SQLITE_OK){
+        cout << "Error opening database" << endl;
+        return false;
+    }
+    string query = "DELETE FROM passwords WHERE userID = :userID AND service = :service AND username = :username;";
+    sqlite3_stmt *stmt; // prepared statement
+    res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
+    if(res != SQLITE_OK){ // if there is an error
+        cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return false;
+    }
+        // Bind parameters to the prepared statement using named placeholders
+    res = sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, ":userID"), this->userID);
+    if (res != SQLITE_OK) {
+        cout << "Error binding userID parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":service"), service.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding service parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding username parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+    res = sqlite3_step(stmt); // execute the prepared statement
+    if(res != SQLITE_DONE){ // if there is a row, then the username exists
+        cout << "Error deleting from database: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt); // finalize the prepared statement
+        sqlite3_close(db); // close the database
+        return false; // return true
+    }
+    sqlite3_finalize(stmt); // finalize the prepared statement
+    sqlite3_close(db);// close the database
+    cout << "Password for " << service << " deleted successfully" << endl;
+    return true; // return false
+}
