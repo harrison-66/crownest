@@ -3,6 +3,8 @@
 #include <fstream>
 #include <streambuf>
 #include <crow.h>
+#include <crow/middlewares/session.h>
+#include <crow/middlewares/cookie_parser.h>
 #include "User.hpp"
 #include "sql/sqlite3.h"
 #include "crowFunctions.hpp"
@@ -29,16 +31,45 @@ std::string readHTMLFile(const std::string& filename) {
 int main() {
     createUserTable();
     createPasswordTable();
+    User current = User();
     // Set up the Crow server
-    SimpleApp app;
+    //SimpleApp app;
+
+    using Session = crow::SessionMiddleware<crow::InMemoryStore>;
+
+    // Writing your own store is easy
+    // Check out the existing ones for guidelines
+
+    // Make sure the CookieParser is registered before the Session
+    crow::App<crow::CookieParser, Session> app{Session{
+      // customize cookies
+        crow::CookieParser::Cookie("session").max_age(/*one day*/ 24 * 60 * 60).path("/"),10,crow::InMemoryStore{}}};
 
     // Endpoint for the main page
     CROW_ROUTE(app, "/")([]() {
         return readHTMLFile("src/index.html");
     });
 
-    CROW_ROUTE(app, "/home")([]() {
-        return readHTMLFile("src/home.html");
+    CROW_ROUTE(app, "/home").methods(HTTPMethod::Get)([&app](const crow::request& req){
+        
+        auto& session = app.get_context<Session>(req);
+        // Retrieve user data from session if available
+        string username_ = session.get("user", "Not Found");
+        cout << "in home" << endl;
+        //string username = user.getUsername();
+        if (username_.empty()) {
+            return crow::response(401, "Unauthorized");
+        }
+        std::string htmlContent = readHTMLFile("src/home.html");
+        // Replace a placeholder in the HTML content with the username
+        size_t placeholderPos = htmlContent.find("{{USERNAME}}");
+        if (placeholderPos != std::string::npos) {
+            htmlContent.replace(placeholderPos, strlen("{{USERNAME}}"), username_);
+        }
+
+        return crow::response(htmlContent);
+
+        //return readHTMLFile("src/home.html");
     });
 
     CROW_ROUTE(app, "/login-style.css")([]() {
@@ -105,7 +136,7 @@ int main() {
         return crow::response(200, response_data);
     });
 
-    CROW_ROUTE(app, "/login").methods(HTTPMethod::Post)([](const crow::request& req) {
+    CROW_ROUTE(app, "/login").methods(HTTPMethod::Post)([&app](const crow::request& req) {
         // Parse the JSON data from the request body
         auto json_data = crow::json::load(req.body);
         if (!json_data) {
@@ -119,8 +150,9 @@ int main() {
         // Verify the login credentials in the database
         if (verifyLogin(username, password)) {
             // Login successful
-            // You may use a session mechanism to keep the user logged in
-            // For simplicity, we're returning a success message as JSON
+            auto& session = app.get_context<Session>(req);
+            session.set("user", username);
+            session.set("pass", password);
             crow::json::wvalue response_data;
             response_data["success"] = true;
             return crow::response(200, response_data);

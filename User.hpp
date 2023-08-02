@@ -25,6 +25,7 @@ class User{ //* this class doesnt insert into the database, it just holds the da
         string encryptPassword(string password);
         void getServicePasswords(string service);
         void printAllPasswords();
+        string getUsername();
 
 
     private:
