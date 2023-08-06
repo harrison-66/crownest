@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <fstream>
 #include <regex>
+#include <sodium.h>
 
 #include "User.hpp" 
 #include "sql/sqlite3.h"
@@ -163,6 +164,29 @@ bool validEmail(string email){ // regex check, found on stackoverflow
     return regex_match(email,pattern);
 }
 
+std::string hashPassword(const std::string& password) {
+    // Generate a random salt
+    unsigned char salt[crypto_pwhash_SALTBYTES];
+    randombytes_buf(salt, sizeof(salt));
+
+    // Hash the password
+    std::vector<char> hash(crypto_pwhash_STRBYTES);
+    if (crypto_pwhash_str(
+            hash.data(), password.c_str(), password.length(),
+            crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE) != 0) {
+        std::cerr << "Error hashing password" << std::endl;
+        return "";
+    }
+
+    // Construct the hash string by directly appending hash and salt
+    std::string hash_str;
+    hash_str.reserve(crypto_pwhash_STRBYTES + crypto_pwhash_SALTBYTES);
+    hash_str.append(hash.data(), crypto_pwhash_STRBYTES);
+    hash_str.append(reinterpret_cast<const char*>(salt), crypto_pwhash_SALTBYTES);
+
+    return hash_str;
+}
+
 string crunchPass(string primary_pass){
     long hashed = 0;
     string reversed;
@@ -244,7 +268,7 @@ bool newUser(string username, string email, string hash){
 }
 
 
-bool verifyLogin(const std::string& username, const std::string& password) {
+/*bool verifyLogin(const std::string& username, const std::string& password) {
     sqlite3* db;
     int res = sqlite3_open("passwordManager.db", &db);
     if (res != SQLITE_OK) {
@@ -283,6 +307,47 @@ bool verifyLogin(const std::string& username, const std::string& password) {
         sqlite3_finalize(stmt);
         sqlite3_close(db);
         return true;
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    return false;
+}*/
+bool verifyLogin(const std::string& username, const std::string& password) {
+    sqlite3* db;
+    int res = sqlite3_open("passwordManager.db", &db);
+    if (res != SQLITE_OK) {
+        std::cout << "Error opening database" << std::endl;
+        return false;
+    }
+
+    std::string query = "SELECT hash FROM users WHERE username = ?;";
+    sqlite3_stmt* stmt; // prepared statement
+    res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL);
+    if (res != SQLITE_OK) {
+        std::cout << "Error preparing statement: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return false;
+    }
+
+    res = sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        std::cout << "Error binding username parameter: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+
+    res = sqlite3_step(stmt);
+    if (res == SQLITE_ROW) {
+        const unsigned char* storedHash = sqlite3_column_text(stmt, 0); // Assuming the hash column is at index 0
+        std::string storedHashStr(reinterpret_cast<const char*>(storedHash));
+        
+        bool loginVerified = verifyPassword(password, storedHashStr);
+        
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return loginVerified;
     }
 
     sqlite3_finalize(stmt);

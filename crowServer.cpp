@@ -14,7 +14,7 @@
 
 using json = nlohmann::json;
 
-// g++ command: g++ -std=c++11 -I./Crow/include -I/opt/homebrew/Cellar/asio/1.28.1/include crowServer.cpp User.cpp -lsqlite3 -lpthread -o my_crow_app
+// g++ command: g++ -std=c++11 -I./Crow/include -I/opt/homebrew/Cellar/asio/1.28.1/include crowServer.cpp User.cpp -lsqlite3 -lsodium -lpthread -o my_crow_app
 
 using namespace std;
 using namespace crow;
@@ -118,7 +118,7 @@ int main() {
         }
 
         // Hash the password before storing it in the database
-        std::string hash = crunchPass(password);
+        std::string hash = hashPassword(password);
 
         // Insert the user data into the database
         if (!newUser(username, email, hash)) {

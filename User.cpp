@@ -1,6 +1,8 @@
 #include "User.hpp"
 #include <iostream>
 #include <vector>
+#include <string>
+#include <sodium.h>
 
 using namespace std;
 
@@ -26,6 +28,27 @@ struct PasswordData { // used to store data from sql query on passwords
     return 0;
 }*/
 
+// Verify a password against its hash
+bool verifyPassword(const std::string& password, const std::string& hash_str) {
+
+
+    // Extract the salt from the hash string
+    unsigned char salt[crypto_pwhash_SALTBYTES];
+    std::string salt_str = hash_str.substr(hash_str.length() - crypto_pwhash_SALTBYTES);
+    if (salt_str.length() != crypto_pwhash_SALTBYTES) {
+        std::cerr << "Invalid hash format" << std::endl;
+        return false;
+    }
+    std::copy(salt_str.begin(), salt_str.end(), salt);
+
+    // Verify the password
+    if (crypto_pwhash_str_verify(hash_str.c_str(), password.c_str(), password.length()) != 0) {
+        std::cerr << "crypto_pwhash_str_verify returned: " << crypto_pwhash_str_verify(hash_str.c_str(), password.c_str(), password.length()) << std::endl;
+        return false;
+    }
+
+    return true;
+}
 
 long generateSalt(string primary_pass){ // generate a salt value based on the user's password
     long salt = 1;

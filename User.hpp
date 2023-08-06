@@ -9,6 +9,7 @@
 
 using namespace std;
 
+bool verifyPassword(const std::string& password, const std::string& hash_str);
 long generateSalt(string primary_pass);
 long stringToLong(string toConvert);
 bool allowAccess(string username, string master);
