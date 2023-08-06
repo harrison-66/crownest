@@ -187,8 +187,8 @@ std::string hashPassword(const std::string& password) {
     return hash_str;
 }
 
-string crunchPass(string primary_pass){
-    long hashed = 0;
+string crunchPass(string primary_pass){//! DEPRECATED, use hashPassword instead
+    long hashed = 0; //! DO NOT USE, extremely insecure
     string reversed;
     int dig_count = 0;
 
@@ -214,7 +214,7 @@ string crunchPass(string primary_pass){
         to_write += reversed[i];
     }
     return to_write;
-}
+} 
 
 bool newUser(string username, string email, string hash){
     sqlite3 *db;

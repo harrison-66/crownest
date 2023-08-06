@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <sodium.h>
+#include "mini/ini.h"
 
 using namespace std;
 
@@ -27,6 +28,14 @@ struct PasswordData { // used to store data from sql query on passwords
 
     return 0;
 }*/
+
+std::string getMasterKey(){
+    mINI::INIFile file("config.ini");
+    mINI::INIStructure ini;
+    file.read(ini);
+    std::string ret = ini.get("Keys").get("master_key");
+    return ret;
+}
 
 // Verify a password against its hash
 bool verifyPassword(const std::string& password, const std::string& hash_str) {
@@ -290,34 +299,60 @@ void User::addPassword(string service, string username_, string password){ // ad
     return; // return false
 }
 
-string User::decryptPassword(string encrypted_string){ // decrypt the password
-    long encrypted = stringToLong(encrypted_string);
-    long salt = generateSalt(this->master);
-    long to_decode = encrypted ^ salt; // XOR the encrypted string with the salt to get the original value
-    string pass_out;
-    while(to_decode > 0){
-        long temp = to_decode % 100;
-        to_decode = to_decode / 100;
-        pass_out += char(temp + 32);
+std::string User::encryptPassword(std::string password) { // encrypt the password
+    unsigned char nonce[crypto_secretbox_NONCEBYTES];
+    randombytes_buf(nonce, sizeof nonce);
+
+    unsigned char encrypted[crypto_secretbox_MACBYTES + password.length()];
+    std::string masterKey = getMasterKey();
+    unsigned char key[crypto_secretbox_KEYBYTES];
+
+    // Create a SHA-256 hash of the master key if it's not exactly 32 bytes long
+    if (masterKey.size() != crypto_secretbox_KEYBYTES) {
+        crypto_hash_sha256(key, (const unsigned char*)masterKey.c_str(), masterKey.size());
+    } else {
+        memcpy(key, masterKey.c_str(), crypto_secretbox_KEYBYTES);
     }
-    string give_to_user;
-    for (int i = (pass_out.length()-1); i >= 0; i--){
-        give_to_user += pass_out[i];
+    if (crypto_secretbox_easy(encrypted, (const unsigned char *)password.c_str(), password.length(), nonce, key) != 0) {
+        //panic! The library couldn't encrypt the password, this should never happen
+        return "";
     }
-    return give_to_user;
+
+    // concatenate the nonce and the cipher text
+    std::string result(nonce, nonce + sizeof nonce);
+    result += std::string(encrypted, encrypted + sizeof encrypted);
+
+    return result;
 }
 
-string User::encryptPassword(string password){ // encrypt the password
-    long salt = generateSalt(this->master);
-    long digit_count = 1;
-    long num_pass = 0;
-    for (int i = (password.length()-1); i >= 0; i--){
-        int temp = password[i] - 32;
-        num_pass += (temp * digit_count);
-        digit_count = digit_count * 100;
+std::string User::decryptPassword(std::string encrypted_string) { // decrypt the password
+    if (encrypted_string.length() < crypto_secretbox_NONCEBYTES + crypto_secretbox_MACBYTES) {
+        //panic! the encrypted password is not valid
+        return "";
     }
-    long salted = num_pass ^ salt; //! store this value
-    return to_string(salted); // return the encrpted password
+
+    unsigned char nonce[crypto_secretbox_NONCEBYTES];
+    std::copy(encrypted_string.begin(), encrypted_string.begin() + crypto_secretbox_NONCEBYTES, nonce);
+
+    unsigned char encrypted[encrypted_string.length() - crypto_secretbox_NONCEBYTES];
+    std::copy(encrypted_string.begin() + crypto_secretbox_NONCEBYTES, encrypted_string.end(), encrypted);
+
+    std::string masterKey = getMasterKey();
+    unsigned char key[crypto_secretbox_KEYBYTES];
+
+    // Create a SHA-256 hash of the master key if it's not exactly 32 bytes long
+    if (masterKey.size() != crypto_secretbox_KEYBYTES) {
+        crypto_hash_sha256(key, (const unsigned char*)masterKey.c_str(), masterKey.size());
+    } else {
+        memcpy(key, masterKey.c_str(), crypto_secretbox_KEYBYTES);
+    }
+    unsigned char decrypted[encrypted_string.length() - crypto_secretbox_NONCEBYTES - crypto_secretbox_MACBYTES];
+    if (crypto_secretbox_open_easy(decrypted, encrypted, sizeof encrypted, nonce, key) != 0) {
+        //panic! the decryption failed, maybe the password was tampered with
+        return "";
+    }
+
+    return std::string(decrypted, decrypted + sizeof decrypted);
 }
 
 int User::getUserID(){ // getter for querying the database
