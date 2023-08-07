@@ -141,7 +141,7 @@ int currentUserID(string username){//* assumes username is safe, considering it 
     int res = sqlite3_open("passwordManager.db", &db);
     if(res != SQLITE_OK){
         cout << "Error opening database" << endl;
-        return -1;
+        return -2;
     }
     const char* query = "SELECT id FROM users WHERE username = :username;";
     sqlite3_stmt *stmt; // prepared statement
@@ -149,14 +149,14 @@ int currentUserID(string username){//* assumes username is safe, considering it 
     if(res != SQLITE_OK){ // if there is an error
         cout << "Error preparing statement: " << sqlite3_errmsg(db) << endl;
         sqlite3_close(db);
-        return -1;
+        return -2;
     }
     res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
     if (res != SQLITE_OK) {
         cout << "Error binding username parameter: " << sqlite3_errmsg(db) << endl;
         sqlite3_finalize(stmt);
         sqlite3_close(db);
-        return -1;
+        return -2;
     }
     res = sqlite3_step(stmt); // execute the prepared statement
     if(res == SQLITE_ROW){ // if there is a row, then the username exists
@@ -449,6 +449,7 @@ string printAllPasswords(string username){
         cout << "Error opening database" << endl;
         return "<p>Error retrieving passwords</p>";
     }
+    //escapeString(username);
     string query = "SELECT service, username, encrypted_password FROM passwords WHERE userID = :userID;";
     vector<PasswordData> passwordArray;
     sqlite3_stmt* stmt;
@@ -479,9 +480,29 @@ string printAllPasswords(string username){
     // Close the database connection
     int i = 1;
     for (const auto& password : passwordArray) {
-        htmlOutput << "<div id=\"card" << i << "\" class=\"bg-gray-900 rounded-lg shadow p-4 border-2 border-rose-900 hover:border-rose-700 mt-4\">\n";
+        /*htmlOutput << "<div id=\"card" << i << "\" class=\"bg-gray-900 rounded-lg shadow p-4 border-2 border-rose-900 hover:border-rose-700 mt-4\">\n";
         htmlOutput << "<h2 class=\"text-2xl text-gray-400 font-bold mb-1\">" << password.service << "</h2>\n";
         htmlOutput << "<p class=\"text-sm text-gray-400 mb-2\">" << password.username << "</p>\n";
+        htmlOutput << "<div class=\"relative w-full\">\n";
+        //htmlOutput << "<button data-service=\"" << password.service << "\" data-username=\"" << password.username << "\" class=\"delete-btn bg-red-500 hover:bg-red-700 text-white py-1 px-2 rounded\">Delete</button>\n";
+        htmlOutput << "<div class=\"absolute inset-y-0 right-0 flex items-center px-2\">\n";
+        htmlOutput << "<input class=\"hidden password-toggle\" id=\"toggle" << i << "\" type=\"checkbox\" />\n";
+        htmlOutput << "<label class=\"bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer password-label\" for=\"toggle" << i << "\">show</label>\n";
+        htmlOutput << "</div>\n";
+        htmlOutput << "<input class=\"appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-rose-900 focus:bg-white text-gray-700 pr-16 font-mono password-field\" id=\"password" << i << "\" type=\"password\" value=\"" << decryptPassword(password.encrypted_password) << "\" readonly/>\n";
+        htmlOutput << "</div>\n";
+        htmlOutput << "</div>\n";*/
+        htmlOutput << "<div id=\"card" << i << "\" class=\"bg-gray-900 rounded-lg shadow p-4 border-2 border-rose-900 hover:border-rose-700 mt-4\">\n";
+
+// Introducing a flex container for service, username, and delete button
+        htmlOutput << "<div class=\"flex justify-between items-start mb-2\">\n";
+        htmlOutput << "<div>\n";  // Container for service and username
+        htmlOutput << "<h2 class=\"text-2xl text-gray-400 font-bold mb-1\">" << password.service << "</h2>\n";
+        htmlOutput << "<p class=\"text-sm text-gray-400\">" << password.username << "</p>\n";
+        htmlOutput << "</div>\n";  // End of container for service and username
+        htmlOutput << "<button data-service=\"" << password.service << "\" data-username=\"" << password.username << "\" class=\"delete-btn bg-red-500 hover:bg-red-700 text-white mt-1 py-1 px-2 rounded\">Delete</button>\n";
+        htmlOutput << "</div>\n";  // End of flex container
+
         htmlOutput << "<div class=\"relative w-full\">\n";
         htmlOutput << "<div class=\"absolute inset-y-0 right-0 flex items-center px-2\">\n";
         htmlOutput << "<input class=\"hidden password-toggle\" id=\"toggle" << i << "\" type=\"checkbox\" />\n";
@@ -504,6 +525,8 @@ bool newUser(string username, string email, string hash){
         cout << "Error opening database" << endl;
         return false;
     } // db is open successfully
+    //escapeString(username);
+    //escapeString(email);
     string query = "INSERT INTO users (username, email, hash) VALUES (:username, :email, :hash);";
     sqlite3_stmt *stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
@@ -601,7 +624,7 @@ bool verifyLogin(const std::string& username, const std::string& password) {
         std::cout << "Error opening database" << std::endl;
         return false;
     }
-
+    //escapeString(username);
     std::string query = "SELECT hash FROM users WHERE username = ?;";
     sqlite3_stmt* stmt; // prepared statement
     res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL);
@@ -634,4 +657,55 @@ bool verifyLogin(const std::string& username, const std::string& password) {
     sqlite3_finalize(stmt);
     sqlite3_close(db);
     return false;
+}
+
+bool deletePassword(string service, string username, string mainUsername){ //* assumes username is safe, considering it is from session data after a safe login
+    sqlite3 *db;
+    int res = sqlite3_open("passwordManager.db", &db);
+    if(res != SQLITE_OK){
+        cout << "Error opening database" << endl;
+        return false;
+    }
+    //escapeString(service);
+    //escapeString(username);
+    string query = "DELETE FROM passwords WHERE userID = :userID AND service = :service AND username = :username;";
+    sqlite3_stmt *stmt; // prepared statement
+    res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL); // -1 means query is null terminated, stmt is the prepared statement
+    if(res != SQLITE_OK){ // if there is an error
+        cout << "Error preparing statement" << endl;
+        sqlite3_close(db);
+        return false;
+    }
+        // Bind parameters to the prepared statement using named placeholders
+    res = sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, ":userID"), currentUserID(mainUsername));
+    if (res != SQLITE_OK) {
+        cout << "Error binding userID parameter" << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":service"), service.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding service parameter" << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+    res = sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, ":username"), username.c_str(), -1, SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        cout << "Error binding username parameter" << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return false;
+    }
+    res = sqlite3_step(stmt); // execute the prepared statement
+    if(res != SQLITE_DONE){ // if there is a row, then the username exists
+        cerr << "Error deleting from database" << endl;
+        sqlite3_finalize(stmt); // finalize the prepared statement
+        sqlite3_close(db); // close the database
+        return false; // return true
+    }
+    sqlite3_finalize(stmt); // finalize the prepared statement
+    sqlite3_close(db);// close the database
+    return true; // return false
 }

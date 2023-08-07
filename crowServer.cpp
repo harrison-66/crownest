@@ -136,6 +136,71 @@ int main() {
         return crow::response(htmlContent);
     });
 
+    CROW_ROUTE(app, "/delete_password").methods("POST"_method)([&app](const crow::request& req) {
+        // Get data from request
+        auto& session = app.get_context<Session>(req);
+        // Retrieve user data from session if available
+        string mainUsername = session.get("user", "Not Found");
+        if (mainUsername.empty()) {
+            return crow::response(401, "Unauthorized");
+        }
+
+
+        auto json = crow::json::load(req.body);
+        if (!json)
+            return crow::response(400, "Invalid request data");
+
+        std::string service = json["service"].s();
+        std::string username = json["username"].s();
+
+        // Assuming you have a deletePassword function
+        if(!deletePassword(service, username, mainUsername)) {
+            return crow::response(500, "Error deleting password");
+        }
+
+        std::string htmlContent = readHTMLFile("src/home.html");
+        
+        // Replace a placeholder in the HTML content with the username
+        size_t placeholderPos = htmlContent.find("{{USERNAME}}");
+        if (placeholderPos != std::string::npos) {
+            htmlContent.replace(placeholderPos, strlen("{{USERNAME}}"), mainUsername);
+        }
+
+        std::string alertHTML ="<div class='p-4 text-red-900 bg-red-100 border border-red-200 rounded-md'>"
+        "  <div class='flex justify-between flex-wrap'>"
+        "    <div class='w-0 flex-1 flex'>"
+        "      <div class='mr-3 pt-1'>"
+        "        <!-- svg icon -->"
+        "      </div>"
+        "      <div>"
+        "        <h4 class='text-md leading-6 font-medium'>"
+        "          Password Deleted Succesfully!"
+        "        </h4>"
+        "        <p class='text-sm'>"
+        "          Password has been deleted from the database permanently."
+        "        </p>"
+        "        <div class='flex mt-3'>"
+        "          <button type='button' onclick='location.href=\"/home\"' class='w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-700 text-base font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto sm:text-sm'>"
+        "            Return to Nest"
+        "          </button>"
+        "        </div>"
+        "      </div>"
+        "    </div>"
+        "    <!-- Close button -->"
+        "  </div>"
+        "</div>";
+
+        size_t alertPos = htmlContent.find("<div class=\"hidden\">{{ALERT}}</div>");
+        if (alertPos != std::string::npos) {
+            htmlContent.replace(alertPos, strlen("<div class=\"hidden\">{{ALERT}}</div>"), alertHTML);
+        }
+
+        return crow::response(htmlContent);
+    });
+
+
+    
+
     CROW_ROUTE(app, "/login-style.css")([]() {
         return readHTMLFile("src/login-style.css");
     });

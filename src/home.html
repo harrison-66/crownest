@@ -165,6 +165,44 @@
             document.getElementById("aboutDiv").addEventListener("click", function() {
                 window.location.href = "/about";
             });
+
+            document.addEventListener("DOMContentLoaded", function() {
+                const deleteButtons = document.querySelectorAll('.delete-btn');
+
+                deleteButtons.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const service = this.getAttribute("data-service");
+                        const username = this.getAttribute("data-username");
+
+                        fetch('/delete_password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ service: service, username: username })
+                        })
+                        .then(response => {
+                            // Check if the response status is not successful
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            if (html) {
+                                // Replace the entire page content with the returned HTML
+                                document.documentElement.innerHTML = html;
+                                // Optional: Re-attach the event listeners if needed or use event delegation
+                            } else {
+                                console.error("Failed to delete password. Empty response received.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Fetch error:', error.message);
+                        });
+                    });
+                });
+            });
         </script>
     </body>
 </html>
