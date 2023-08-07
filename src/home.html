@@ -35,7 +35,7 @@
                 <i class="bi bi-house-door-fill"></i>
                 <span class="text-[15px] ml-2 text-gray-200 font-bold">Home</span>
             </div>
-            <div class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-rose-950 text-white">
+            <div id="aboutDiv" class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-rose-950 text-white">
                 <i class="bi bi-bookmark-fill"></i>
                 <span class="text-[15px] ml-2 text-gray-200 font-bold">About</span>
             </div>
@@ -78,26 +78,40 @@
         <div class="main-content ml-[300px] p-5">
             <!-- Your main content goes here -->
             <h1 class="font-medium text-3xl text-center py-4 text-gray-800">{{USERNAME}}'s nest</h1>
+            <div class="hidden">{{ALERT}}</div>
             <div class="main-content p-5 flex justify-center">
-                <div class="space-y-4">
+                <div class="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="hidden">{{PASSWORDS}}</div>
                     <!-- Item example -->
-                    <div id="card1"class="bg-gray-900 rounded shadow p-4 border-2 border-rose-900 hover:border-rose-700">
+                    <!--<div id="card1"class="bg-gray-900 rounded-lg shadow p-4 border-2 border-rose-900 hover:border-rose-700">
                         <h2 class="text-2xl text-gray-400 font-bold mb-1">Google</h2>
-                        <p class="text-sm text-gray-400 mb-2">user@gmail.com</p>
+                        <p class="text-sm text-gray-400 mb-2">username</p>
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                                <input class="hidden" id="toggle" type="checkbox" />
-                                <label class="bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer" for="toggle">show</label>
+                                <input class="hidden password-toggle" id="toggle1" type="checkbox" />
+                                <label class="bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer password-label" for="toggle1">show</label>
                             </div>
-                            <input class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-rose-900 focus:bg-white text-gray-700 pr-16 font-mono" id="password1" type="password" value="password123" readonly/>
+                            <input class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-rose-900 focus:bg-white text-gray-700 pr-16 font-mono password-field" id="password1" type="password" value="password123" readonly/>
                         </div>
                     </div>
+                    <div id="card2"class="bg-gray-900 rounded-lg shadow p-4 border-2 border-rose-900 hover:border-rose-700">
+                        <h2 class="text-2xl text-gray-400 font-bold mb-1">Google</h2>
+                        <p class="text-sm text-gray-400 mb-2">username</p>
+                        <div class="relative w-full">
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2">
+                                <input class="hidden password-toggle" id="toggle2" type="checkbox" />
+                                <label class="bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer password-label" for="toggle2">show</label>
+                            </div>
+                            <input class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-rose-900 focus:bg-white text-gray-700 pr-16 font-mono password-field" id="password1" type="password" value="password123" readonly/>
+                        </div>
+                    </div>-->
                     <!-- Other items can be added here -->
                 </div>
             </div>
             
 
         </div>
+
         <script type="text/javascript">
             function dropdown() {
                 document.querySelector("#submenu").classList.toggle("hidden");
@@ -130,10 +144,10 @@
 
             passwordToggles.forEach(function(toggle) {
                 toggle.addEventListener('change', function() {
-                    const cardId = toggle.id.replace('toggle', 'card');
+                    const cardId = 'card' + toggle.id.replace('toggle', '');
                     const card = document.querySelector('#' + cardId);
-                    const password = card.querySelector('.password1');
-                    const passwordLabel = card.querySelector('.password-label-1');
+                    const password = card.querySelector('.password-field');
+                    const passwordLabel = card.querySelector('.password-label');
 
                     if (password.type === 'password') {
                         password.type = 'text';
@@ -147,6 +161,10 @@
                 });
             });
 
+
+            document.getElementById("aboutDiv").addEventListener("click", function() {
+                window.location.href = "/about";
+            });
         </script>
     </body>
 </html>

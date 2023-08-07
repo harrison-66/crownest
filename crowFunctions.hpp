@@ -15,6 +15,12 @@
 
 using namespace std;
 
+struct PasswordData { // used to store data from sql query on passwords
+    std::string service;
+    std::string username;
+    std::string encrypted_password;
+};
+
 std::string urlDecode(std::string str){
     std::string ret;
     char ch;
@@ -434,6 +440,62 @@ string crunchPass(string primary_pass){//! DEPRECATED, use hashPassword instead
     }
     return to_write;
 } 
+
+string printAllPasswords(string username){
+    stringstream htmlOutput;
+    sqlite3 *db;
+    int res = sqlite3_open("passwordManager.db", &db);
+    if(res != SQLITE_OK){
+        cout << "Error opening database" << endl;
+        return "<p>Error retrieving passwords</p>";
+    }
+    string query = "SELECT service, username, encrypted_password FROM passwords WHERE userID = :userID;";
+    vector<PasswordData> passwordArray;
+    sqlite3_stmt* stmt;
+    res = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+    if (res != SQLITE_OK) {
+        cout << "Error preparing query: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return "<p>Error retrieving passwords</p>";
+    }
+    // Bind parameters to the prepared statement using named placeholders
+    res = sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, ":userID"), currentUserID(username));
+    if (res != SQLITE_OK) {
+        cout << "Error binding parameter: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return "<p>Error retrieving passwords</p>";
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        PasswordData password;
+        password.service = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+        password.username = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        password.encrypted_password = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+
+        passwordArray.push_back(password);
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    // Close the database connection
+    int i = 1;
+    for (const auto& password : passwordArray) {
+        htmlOutput << "<div id=\"card" << i << "\" class=\"bg-gray-900 rounded-lg shadow p-4 border-2 border-rose-900 hover:border-rose-700 mt-4\">\n";
+        htmlOutput << "<h2 class=\"text-2xl text-gray-400 font-bold mb-1\">" << password.service << "</h2>\n";
+        htmlOutput << "<p class=\"text-sm text-gray-400 mb-2\">" << password.username << "</p>\n";
+        htmlOutput << "<div class=\"relative w-full\">\n";
+        htmlOutput << "<div class=\"absolute inset-y-0 right-0 flex items-center px-2\">\n";
+        htmlOutput << "<input class=\"hidden password-toggle\" id=\"toggle" << i << "\" type=\"checkbox\" />\n";
+        htmlOutput << "<label class=\"bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer password-label\" for=\"toggle" << i << "\">show</label>\n";
+        htmlOutput << "</div>\n";
+        htmlOutput << "<input class=\"appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-rose-900 focus:bg-white text-gray-700 pr-16 font-mono password-field\" id=\"password" << i << "\" type=\"password\" value=\"" << decryptPassword(password.encrypted_password) << "\" readonly/>\n";
+        htmlOutput << "</div>\n";
+        htmlOutput << "</div>\n";
+        ++i;
+    }
+    
+    return htmlOutput.str();
+}
+
 
 bool newUser(string username, string email, string hash){
     sqlite3 *db;
