@@ -49,24 +49,26 @@
                     </span>
                 </div>
             </div>
-            <div class="text-left text-sm mt-2 w-4/5 mx-auto text-gray-200 font-bold" id="submenu">
-                <label class="font-medium block mb-1 mt-4 text-white" for="username">Service</label>
-                    <input spellcheck="false" class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-indigo-700 focus:bg-white text-gray-700 pr-16 font-mono" id="service" type="text" autocomplete="off" autofocus />
+            <form action="/insert_password" method="POST">
+                <div class="text-left text-sm mt-2 w-4/5 mx-auto text-gray-200 font-bold" id="submenu">
+                    <label class="font-medium block mb-1 mt-4 text-white" for="username">Service</label>
+                        <input spellcheck="false" class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-indigo-700 focus:bg-white text-gray-700 pr-16 font-mono" id="service" type="text" autocomplete="off" autofocus name="service" />
 
-                <label class="font-medium block mb-1 mt-4 text-white" for="username">Username</label>
-                    <input spellcheck="false" class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-indigo-700 focus:bg-white text-gray-700 pr-16 font-mono" id="username" type="text" autocomplete="off" autofocus />
-                <label class="font-medium block mb-1 mt-4 text-white" for="password">Password</label>
-                <div class="relative w-full">
-                    <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                        <input spellcheck="false" class="hidden js-password-toggle" id="toggle" type="checkbox" />
-                        <label class="bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer js-password-label" for="toggle">show</label>
+                    <label class="font-medium block mb-1 mt-4 text-white" for="username">Username</label>
+                        <input spellcheck="false" class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-indigo-700 focus:bg-white text-gray-700 pr-16 font-mono" id="username" type="text" autocomplete="off" autofocus name="username" />
+                    <label class="font-medium block mb-1 mt-4 text-white" for="password">Password</label>
+                    <div class="relative w-full">
+                        <div class="absolute inset-y-0 right-0 flex items-center px-2">
+                            <input spellcheck="false" class="hidden js-password-toggle" id="toggle" type="checkbox" />
+                            <label class="bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer js-password-label" for="toggle">show</label>
+                        </div>
+                        <input class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-indigo-700 focus:bg-white text-gray-700 pr-16 font-mono js-password" id="password" type="password" autocomplete="off" name="password"/>
                     </div>
-                    <input class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-indigo-700 focus:bg-white text-gray-700 pr-16 font-mono js-password" id="password" type="password" autocomplete="off"/>
+                    <button class="w-full bg-rose-950 hover:bg-rose-800 text-white font-medium py-3 px-4 mt-5 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Encrypt and Store Password
+                    </button>
                 </div>
-                <button class="w-full bg-rose-950 hover:bg-rose-800 text-white font-medium py-3 px-4 mt-5 rounded focus:outline-none focus:shadow-outline" type="button">
-                    Encrypt and Store Password
-                </button>
-            </div>
+            </form>
             <div class="my-4 bg-gray-600 h-[1px]"></div>
             <div class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-rose-950 text-white">
                 <i class="bi bi-box-arrow-in-right"></i>
@@ -76,6 +78,25 @@
         <div class="main-content ml-[300px] p-5">
             <!-- Your main content goes here -->
             <h1 class="font-medium text-3xl text-center py-4 text-gray-800">{{USERNAME}}'s nest</h1>
+            <div class="main-content p-5 flex justify-center">
+                <div class="space-y-4">
+                    <!-- Item example -->
+                    <div id="card1"class="bg-gray-900 rounded shadow p-4 border-2 border-rose-900 hover:border-rose-700">
+                        <h2 class="text-2xl text-gray-400 font-bold mb-1">Google</h2>
+                        <p class="text-sm text-gray-400 mb-2">user@gmail.com</p>
+                        <div class="relative w-full">
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2">
+                                <input class="hidden" id="toggle" type="checkbox" />
+                                <label class="bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 font-mono cursor-pointer" for="toggle">show</label>
+                            </div>
+                            <input class="appearance-none border-2 rounded w-full py-3 px-3 leading-tight border-gray-300 bg-gray-100 focus:outline-none focus:border-rose-900 focus:bg-white text-gray-700 pr-16 font-mono" id="password1" type="password" value="password123" readonly/>
+                        </div>
+                    </div>
+                    <!-- Other items can be added here -->
+                </div>
+            </div>
+            
+
         </div>
         <script type="text/javascript">
             function dropdown() {
@@ -104,6 +125,27 @@
 
             password.focus()
             })
+
+            const passwordToggles = document.querySelectorAll('.password-toggle');
+
+            passwordToggles.forEach(function(toggle) {
+                toggle.addEventListener('change', function() {
+                    const cardId = toggle.id.replace('toggle', 'card');
+                    const card = document.querySelector('#' + cardId);
+                    const password = card.querySelector('.password1');
+                    const passwordLabel = card.querySelector('.password-label-1');
+
+                    if (password.type === 'password') {
+                        password.type = 'text';
+                        passwordLabel.innerHTML = 'hide';
+                    } else {
+                        password.type = 'password';
+                        passwordLabel.innerHTML = 'show';
+                    }
+
+                    password.focus();
+                });
+            });
 
         </script>
     </body>

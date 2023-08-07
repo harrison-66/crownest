@@ -138,9 +138,26 @@ bool createPasswordTable(){
     return true;
 }
 
+void dropUsersTable(){
+    sqlite3 *db;
+    int res = sqlite3_open("passwordManager.db", &db);
+    if(res != SQLITE_OK){
+        cout << "Error opening database" << endl;
+        return;
+    }
+    const char* dropTableQuery = "DROP TABLE IF EXISTS users;";
+    res = sqlite3_exec(db, dropTableQuery, NULL, NULL, NULL);
+    if(res != SQLITE_OK){
+        cout << "Error dropping table: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_close(db);
+    return;
+}
 
 int main(){ // just need a query to print the user database
-    dropPasswordsTable();
+    dropUsersTable();
 
     return 0;
 }

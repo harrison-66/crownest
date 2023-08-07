@@ -80,7 +80,8 @@ long stringToLong(string toConvert){ // convert a string to a longeeee
     return return_value;
 }
 
-bool allowAccess(string username, string master){ // check if the user's password is correct
+bool allowAccess(string username, string master){ //!deprecated check if the user's password is correct
+    cerr << "Deprecated function called" << endl;
     string checker;
     long hashed = 0;
     int dig_count = 0;

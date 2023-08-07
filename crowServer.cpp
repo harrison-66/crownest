@@ -9,7 +9,6 @@
 #include "sql/sqlite3.h"
 #include "crowFunctions.hpp"
 
-#include <crow.h>
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
@@ -68,6 +67,41 @@ int main() {
         return crow::response(htmlContent);
 
         //return readHTMLFile("src/home.html");
+    });
+
+    CROW_ROUTE(app, "/insert_password").methods(HTTPMethod::Post)([&app](const crow::request& req){
+        auto& session = app.get_context<Session>(req);
+        // Retrieve user data from session if available
+        string mainUsername = session.get("user", "Not Found");
+        if (mainUsername.empty()) {
+            return crow::response(401, "Unauthorized");
+        }
+        // Parse the form data from req.body
+        std::map<std::string, std::string> form_data;
+        std::string key, value;
+        std::istringstream iss(req.body);
+        while (std::getline(iss, key, '=') && std::getline(iss, value, '&')) {
+            form_data[key] = urlDecode(value);
+        }
+
+        // Retrieve the fields from the form data
+        string service = form_data["service"];
+        string username_ = form_data["username"];
+        string password = form_data["password"];
+
+        // Use the fields to call your function
+        if(!insertPassword(mainUsername, service, username_, password)){
+            return crow::response(500, "Error inserting password");
+        }
+        std::string htmlContent = readHTMLFile("src/home.html");
+
+        // Replace a placeholder in the HTML content with the username
+        size_t placeholderPos = htmlContent.find("{{USERNAME}}");
+        if (placeholderPos != std::string::npos) {
+            htmlContent.replace(placeholderPos, strlen("{{USERNAME}}"), username_);
+        }
+
+        return crow::response(htmlContent);
     });
 
     CROW_ROUTE(app, "/login-style.css")([]() {
@@ -151,7 +185,7 @@ int main() {
             // Login successful
             auto& session = app.get_context<Session>(req);
             session.set("user", username);
-            session.set("pass", password);
+            //session.set("pass", password);
             crow::json::wvalue response_data;
             response_data["success"] = true;
             return crow::response(200, response_data);
