@@ -70,14 +70,14 @@
                 </div>
             </form>
             <div class="my-4 bg-gray-600 h-[1px]"></div>
-            <div class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-rose-950 text-white">
+            <div id="logoutButton" class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-rose-950 text-white">
                 <i class="bi bi-box-arrow-in-right"></i>
                 <span class="text-[15px] ml-2 text-gray-200 font-bold">Logout</span>
             </div>
         </div>
         <div class="main-content ml-[300px] p-5">
             <!-- Your main content goes here -->
-            <h1 class="font-medium text-3xl text-center py-4 text-gray-800">{{USERNAME}}'s nest</h1>
+            <h1 class="font-large font-bold text-3xl text-center py-4 text-gray-800">{{USERNAME}}'s nest</h1>
             <div class="hidden">{{ALERT}}</div>
             <div class="main-content p-5 flex justify-center">
                 <div class="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -201,6 +201,20 @@
                             console.error('Fetch error:', error.message);
                         });
                     });
+                });
+            });
+            document.getElementById("logoutButton").addEventListener("click", function() {
+                fetch('/logout', {
+                    method: 'GET', // or 'POST' if you've set up your logout route as a POST
+                })
+                .then(response => response.text())
+                .then(data => {
+                    // Handle the response from the server
+                    // For example, redirect to a login page or show a logout message
+                    window.location.href = '/'; // This will redirect to the main page after logout. Adjust as needed.
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
                 });
             });
         </script>

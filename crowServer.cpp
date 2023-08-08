@@ -314,6 +314,14 @@ int main() {
         response.add_header("Content-Type", "application/javascript");
         return response;
     });
+
+    CROW_ROUTE(app, "/logout").methods(HTTPMethod::Get)([&app](const crow::request& req) {
+        auto& session = app.get_context<Session>(req);
+        session.remove("user");
+        return readHTMLFile("src/index.html");
+    });
+
+
     // Start the server on port 8080
     app.port(8080).multithreaded().run();
 
