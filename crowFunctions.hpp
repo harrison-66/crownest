@@ -498,7 +498,7 @@ string printAllPasswords(string username){
         htmlOutput << "<div class=\"flex justify-between items-start mb-2\">\n";
         htmlOutput << "<div>\n";  // Container for service and username
         htmlOutput << "<h2 class=\"text-2xl text-gray-400 font-bold mb-1\">" << password.service << "</h2>\n";
-        htmlOutput << "<p class=\"text-sm text-gray-400\">" << password.username << "</p>\n";
+        htmlOutput << "<p class=\"text-sm text-gray-400\"> User: " << password.username << "</p>\n";
         htmlOutput << "</div>\n";  // End of container for service and username
         htmlOutput << "<button data-service=\"" << password.service << "\" data-username=\"" << password.username << "\" class=\"delete-btn bg-red-500 hover:bg-red-700 text-white mt-1 py-1 px-2 rounded\">Delete</button>\n";
         htmlOutput << "</div>\n";  // End of flex container
