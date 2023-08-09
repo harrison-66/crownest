@@ -27,6 +27,40 @@ std::string readHTMLFile(const std::string& filename) {
     return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
 }
 
+crow::response serve_image(const std::string& path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open())
+    {
+        return crow::response(404);
+    }
+
+    std::vector<char> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    crow::response resp;
+    resp.code = 200;
+    resp.set_header("Content-Type", "image/png");
+    resp.body = std::string(buffer.begin(), buffer.end());
+    return resp;
+}
+
+crow::response serve_file(const std::string& path, const std::string& mime_type)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open())
+    {
+        return crow::response(404);
+    }
+
+    std::vector<char> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    crow::response resp;
+    resp.code = 200;
+    resp.set_header("Content-Type", mime_type);
+    resp.body = std::string(buffer.begin(), buffer.end());
+    return resp;
+}
+
 int main() {
     createUserTable();
     createPasswordTable();
@@ -209,6 +243,17 @@ int main() {
         return readHTMLFile("src/about.html");
     });
 
+    CROW_ROUTE(app, "/favicon.ico")
+    ([] {
+        return serve_file("src/favicon.ico", "image/x-icon");
+    });
+
+    CROW_ROUTE(app, "/favicon-black.ico")
+    ([] {
+        return serve_file("src/favicon-black.ico", "image/x-icon");
+    });
+
+
 // Endpoint for user registration (register route)
     CROW_ROUTE(app, "/register").methods(HTTPMethod::Post)([](const crow::request& req) {
         // Parse the JSON data from the request body
@@ -297,6 +342,26 @@ int main() {
         }
     });
 
+    CROW_ROUTE(app, "/crowArt/black/-_v4.png")
+    ([] {
+        return serve_image("crowArt/black/-_v4.png");
+    });
+    
+    CROW_ROUTE(app, "/crowArt/white/-_V3.png")
+    ([] {
+        return serve_image("crowArt/white/-_V3.png");
+    });
+    // Serving /crowArt/black/-_V1.png
+    CROW_ROUTE(app, "/crowArt/black/-_V1.png")
+    ([] {
+        return serve_image("crowArt/black/-_V1.png");
+    });
+
+    CROW_ROUTE(app, "/crowArt/red/red-_v2.png")
+    ([] {
+        return serve_image("crowArt/red/red-_v2.png");
+    });
+
     CROW_ROUTE(app, "/login.js")
     ([]() {
         // Read the contents of login.js file
@@ -320,6 +385,7 @@ int main() {
         session.remove("user");
         return readHTMLFile("src/index.html");
     });
+
 
 
     // Start the server on port 8080

@@ -7,10 +7,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
     <title>Password Manager</title>
     <link rel="stylesheet" href="login-style.css">
+    <link rel="icon" href="favicon.ico" media="(prefers-color-scheme: dark)">
+    <link rel="icon" href="favicon-black.ico" media="(prefers-color-scheme: light)">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-[#ae9c75] font-mono">
+    <div class="fixed top-0 -left-3 w-24 h-24 bg-no-repeat bg-contain" style="background-image: url('/crowArt/red/red-_v2.png');"></div>
+
+    <div class="fixed top-20 left-20 w-full h-full z-[-1] bg-center bg-no-repeat bg-cover" style="background-image: url('/crowArt/black/-_V1.png'); transform: scale(0.85);"></div>
     <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-lg">
             <h1 class="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
@@ -148,6 +153,15 @@
 
             password.focus()
             })
+
+            
+        document.addEventListener("DOMContentLoaded", function() {
+            let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+            link.type = 'image/x-icon';
+            link.rel = 'shortcut icon';
+            link.href = '/favicon.ico';
+            document.getElementsByTagName('head')[0].appendChild(link);
+        });
     </script>
 </body>
 

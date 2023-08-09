@@ -5,8 +5,16 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdn.tailwindcss.com"></script>
-        <title>Welcome!</title>
+        <link rel="icon" href="favicon.ico" media="(prefers-color-scheme: dark)">
+        <link rel="icon" href="favicon-black.ico" media="(prefers-color-scheme: light)">
+        <title>About crownest</title>
         <style>
+            .info-card {
+                width: calc((100vw - 300px)/2);
+                border-width: 2px;
+                border-color: red;
+            }
+
             .slide {
                 width: calc(100vw - 300px);
                 height: 100vh;
@@ -59,7 +67,7 @@
         <div class="z-10 sidebar fixed top-0 bottom-0 lg:left-0 p-2 w-[300px] overflow-y-auto text-center bg-gray-900">
             <div class="text-gray-100 text-xl">
                 <div class="p-2.5 mt-1 flex items-center">
-                    <i class="bi bi-app-indicator px-2 py-1 rounded-md bg-rose-950"></i>
+                    <img src="/crowArt/white/-_V3.png" alt="Red Crow" class="px-2 py-1 rounded-md" style="width: 64px; height: 64px;">
                     <h1 class="font-bold text-gray-200 text-[15px] ml-3">CrowNest Security</h1>
                     <i
                         class="bi bi-x cursor-pointer ml-28 lg:hidden"
@@ -68,14 +76,14 @@
                 </div>
                 <div class="my-2 bg-gray-600 h-[1px]"></div>
             </div>
-            <div class="p-2.5 flex items-center rounded-md px-4 duration-300 cursor-pointer bg-gray-700 text-white">
+            <!---<div class="p-2.5 flex items-center rounded-md px-4 duration-300 cursor-pointer bg-gray-700 text-white">
                 <i class="bi bi-search text-sm"></i>
                 <input
                     type="text"
                     placeholder="Search for a service"
                     class="text-[15px] ml-4 w-full bg-transparent focus:outline-none"
                     />
-            </div>
+            </div>--->
             <div id="homeDiv" class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-rose-950 text-white">
                 <i class="bi bi-house-door-fill"></i>
                 <span class="text-[15px] ml-2 text-gray-200 font-bold">Home</span>
@@ -123,17 +131,28 @@
         <div class="main-content ml-[300px]">
             <div class="outer-wrapper">
                 <div class="wrapper">
-                    <div class="slide one ">
-                        Overview
+                    <div class="slide one">
+                        about
                     </div>
                     <div class="slide two">
                         Encryption
+                        <ul>
+                            <li>Multiple Encryption algorithms from libsodium used</li>
+                            <li>Argon2 used for main account password hashing</li>
+                            <li>...</li>
+                        </ul>
                     </div>
                     <div class="slide three">
                         Tech Stack
+                        <ul>
+                            <li>Backend written in C++ and the Crow micro-framework</li>
+                            <li>Encrypted data stored in a sqlite3 database</li>
+                            <li>Front end written in HTML, Tailwind CSS, and JS</li>
+                        </ul>
                     </div>
                     <div class="slide four ">
                         Me
+
                     </div>
                 </div>
             </div>
