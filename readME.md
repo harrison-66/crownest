@@ -1,6 +1,8 @@
 # Crownest
 A robust C++ based password manager with a web interface using Crow. This project not only securely stores your passwords but also provides an intuitive web interface to manage them. With strong encryption provided by libsodium, you can ensure your passwords are safe.
 
+**SITE IS CURRENTLY LIVE AT <http://crownest.org>**
+
 ## Features
 - Secure Storage: Passwords are encrypted using libsodium before being stored, ensuring the highest level of security.
 - Web Interface: Manage your passwords easily through a web interface powered by Crow.
