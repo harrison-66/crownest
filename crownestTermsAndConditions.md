@@ -13,3 +13,5 @@ By using the services provided by crownest.org, you acknowledge and agree to the
 - **Indemnity**: You agree to indemnify and hold harmless crownest.org and its owners, operators, and affiliates from any claims, damages, losses, or expenses, including legal fees, arising out of or in connection with your use of our services.
 
 By using our services, you confirm that you have read, understood, and agree to this disclaimer in its entirety. If you do not agree with any part of this disclaimer, please refrain from using our services.
+
+  **Developer's note: Crownest is open-source and strives for meeting encryption standards for your data, but at the end of the day, this is a project maintained by a single college student. If you are concerned, I'd recommend checking the code and the docs referenced in the [About](crownest.org/about) page, or use another service!**
