@@ -5,15 +5,15 @@
 #include <crow.h>
 #include <crow/middlewares/session.h>
 #include <crow/middlewares/cookie_parser.h>
-#include "User.hpp"
 #include "sql/sqlite3.h"
 #include "crowFunctions.hpp"
 
+#include "User.hpp"
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
 
-// g++ command: g++ -std=c++11 -I./Crow/include -I/opt/homebrew/Cellar/asio/1.28.1/include crowServer.cpp User.cpp -lsqlite3 -lsodium -lpthread -o my_crow_app
+// g++ command: g++ -std=c++11 -I./Crow/include -I/opt/homebrew/Cellar/asio/1.28.1/include crowServer.cpp -lsqlite3 -lsodium -lpthread -o my_crow_app
 
 using namespace std;
 using namespace crow;

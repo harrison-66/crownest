@@ -10,7 +10,7 @@
 #include <crow/middlewares/session.h>
 #include <crow/middlewares/cookie_parser.h>
 
-#include "User.hpp" 
+#include "User.hpp"
 #include "sql/sqlite3.h"
 
 using namespace std;
